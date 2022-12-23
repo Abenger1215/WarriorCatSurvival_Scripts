@@ -21,13 +21,14 @@ public class SceneCtrl : MonoBehaviour
 
     public void LoadGameScene()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
+        SceneManager.LoadScene("GameScene");
+        GameManager.instance.PlayNewGame();
         SoundManager.instance.PlayBGMSound("Stage", 0.25f);
     }
 
     public void LoadMainMenu()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenuScene");
+        SceneManager.LoadScene("MainMenuScene");
         SoundManager.instance.PlayBGMSound("Menu", 0.25f);
     }
 }

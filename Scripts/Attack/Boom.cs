@@ -4,20 +4,10 @@ using UnityEngine;
 
 public class Boom : MonoBehaviour
 {
-    private void OnEnable()
-    {
-        gameObject.transform.localScale = Vector3.one * 0.0001f;
-        StartCoroutine(ScaleUp());
-    }
-
-    private void OnDisable()
-    {
-        StopAllCoroutines();
-    }
-
-    IEnumerator ScaleUp()
+    IEnumerator ScaleUp(int limitTime)
     {
         int time = 0;
+        Debug.Log($"Boom activate by {limitTime}");
         while (true)
         {
             if (GameManager.instance.isPause == true)
@@ -28,13 +18,13 @@ public class Boom : MonoBehaviour
 
             time++;
 
-            if(time<= 10)
+            if(time<= limitTime / 2)
             {
                 gameObject.transform.localScale += Vector3.one * 0.2f;
 
             }
 
-            if(time == 25)
+            if(time == limitTime)
             {
                 break;
             }
@@ -47,7 +37,14 @@ public class Boom : MonoBehaviour
     {
         if (other.CompareTag("MONSTER"))
         {
-            other.gameObject.GetComponent<MonsterCtrl>().Damaged(1000f);
+            other.gameObject.GetComponent<Monster>().Damaged(1000f);
         }
+    }
+
+    public void TriggerBoom(float startScale, int limitTime)
+    {
+        gameObject.SetActive(true);
+        gameObject.transform.localScale = Vector3.one * startScale;
+        StartCoroutine(ScaleUp(limitTime));
     }
 }

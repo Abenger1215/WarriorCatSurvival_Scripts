@@ -1,3 +1,6 @@
+// 회전하는 공격
+// 냥발 - cat feet
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,8 +24,8 @@ public class Attack2 : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _deg = AttackManager.instance.Atk2Deg;
-        float rad = Mathf.Deg2Rad * (_deg + (idx * (360 / AttackManager.instance.activeCount)));
+        _deg = AttackManager.instance.attack2Deg;
+        float rad = Mathf.Deg2Rad * (_deg + (idx * (360 / AttackManager.instance.attack2Data.count)));
         float x = dist * Mathf.Sin(rad);
         float y = dist * Mathf.Cos(rad);
         gameObject.transform.position = player.transform.position + new Vector3(x, y);
@@ -35,7 +38,7 @@ public class Attack2 : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("MONSTER"))
         {
-            collision.gameObject.GetComponent<MonsterCtrl>().Damaged(AttackManager.instance.Atk2Damage);
+            collision.gameObject.GetComponent<Monster>().Damaged(AttackManager.instance.attack2Data.damage);
 
             SoundManager.instance.PlaySFXSound("Attack2", 0.3f);
             //Debug.Log("disable by trigger / " + AM.ObjPools[PrefabName].Count + " / " + gameObject.name);

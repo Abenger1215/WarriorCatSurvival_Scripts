@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class JoystickCtrl : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     [SerializeField] private RectTransform handle;
     [SerializeField] private RectTransform background;
@@ -15,8 +15,6 @@ public class JoystickCtrl : MonoBehaviour, IPointerDownHandler, IDragHandler, IP
 
     public float Horizontal { get { return input.x; } }
     public float Vertical { get { return input.y; } }
-
-    bool isTouch = false;
 
     // Start is called before the first frame update
     void Start()

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BackgroundCtrl : MonoBehaviour
+public class Background : MonoBehaviour
 {
     private BackgroundManager BM;
     private GameObject Player;

@@ -20,14 +20,13 @@ public class GameManager : MonoBehaviour
     public int Level = 1;
     public float exp = 0.0f;
     private float maxExp = 100.0f;
-    private float increaseExp = 1.0f;
+    public float increaseExp = 1.0f;
 
     public float PlayTime;
     public string PlayTimeText;
+    public string characterName = "warrior";
 
     public float score = 0;
-
-    private GameObject player;
 
     public static GameManager instance = null;
 
@@ -41,13 +40,14 @@ public class GameManager : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
+
+        DontDestroyOnLoad(this);
     }
 
     private void Start()
     {
-        player = GameObject.FindGameObjectWithTag("PLAYER");
         Application.targetFrameRate = 30;
-        PlayNewGame();
+        //PlayNewGame();
         //PlayTime = Time.deltaTime;
     }
 
@@ -94,7 +94,7 @@ public class GameManager : MonoBehaviour
         score = 0f;
         PlayTime = 0f;
         PlayTimeText = "00 : 00";
-        UIManager.instance.ExpBar.fillAmount = 0;
+        //SetEvent();
     }
 
     public void GameOver()
@@ -117,7 +117,7 @@ public class GameManager : MonoBehaviour
         SoundManager.instance.PlayBGMSound("Stage", 0.25f);
         isRevived = true;
         UIManager.instance.DeactiveGameOverUI();
-        AttackManager.instance.ActiveBoom();
+        AttackManager.instance.ActiveReviveBoom();
         Hp = maxHp;
         Resume();
     }
@@ -153,9 +153,9 @@ public class GameManager : MonoBehaviour
 
     IEnumerator ChangePlayerColorByDamage()
     {
-        player.GetComponent<SpriteRenderer>().color = Color.red;
+        Player.instance.GetComponent<SpriteRenderer>().color = Color.red;
         yield return new WaitForSeconds(0.1f);
-        player.GetComponent<SpriteRenderer>().color = Color.white;
+        Player.instance.GetComponent<SpriteRenderer>().color = Color.white;
     }
 
     public void ExpUp(float exp)
@@ -174,11 +174,11 @@ public class GameManager : MonoBehaviour
     {
         SoundManager.instance.PlaySFXSound("LevelUp", 0.3f);
         Level++;
-        Debug.Log("Player Level Up" + Level);
+        //Debug.Log("Player Level Up" + Level);
 
-        if(MonsterManager.instance.SpawnCooltime >= 0.1f)
+        if(0.5f - MonsterManager.instance.reduceCoolTime >= 0.1f)
         {
-            MonsterManager.instance.SpawnCooltime -= 0.01f;
+            MonsterManager.instance.reduceCoolTime += 0.01f;
         }
 
         onPlayerLevelUp.Invoke();
@@ -209,79 +209,13 @@ public class GameManager : MonoBehaviour
         UIManager.instance.UpdateHpUI();
     }
 
-    public void RunMethod(string methodName)
+    public void SetEvent()
     {
-        SendMessage(methodName, instance);
+        onPlayerDead.AddListener(UIManager.instance.ActiveGameOverUI);
+
+        onPlayerLevelUp.AddListener(UIManager.instance.UpdateLevel);
+        onPlayerLevelUp.AddListener(UIManager.instance.ActiveLevelUpUI);
+        onPlayerLevelUp.AddListener(Pause);
     }
-
-    public void HpIncrease()
-    {
-        Hp = Hp * 1.15f;
-        maxHp = maxHp * 1.15f;
-        Debug.Log("maxHp : " + maxHp + " / Hp : " + Hp);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void RegenIncrease()
-    {
-        regenHp += 1;
-        Debug.Log("RegenIncrease / " + regenHp);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void DamageIncrease()
-    {
-        damage += 0.1f;
-        Debug.Log("DamageIncrease / " + damage);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void SpeedIncrease()
-    {
-        MoveSpeed += 1f;
-        Debug.Log("SpeedIncrease / " + MoveSpeed);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void ExpIncrease()
-    {
-        increaseExp += 0.1f;
-        Debug.Log("ExpIncrease / " + increaseExp);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void Attack1Increase()
-    {
-        AttackManager.instance.Attack1Up();
-        Debug.Log("Attack1Up / " + AttackManager.instance.attack1Lv);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-    public void Attack2Increase()
-    {
-        AttackManager.instance.Attack2Up();
-        Debug.Log("Attack2Up / " + AttackManager.instance.attack2Lv);
-
-        UIManager.instance.DeactiveLevelUpUI();
-        Resume();
-    }
-
-    public void ScoreIncrease()
-    {
-        Debug.Log("Score Increase");
-
-        score += 15f;
-        Resume();
-    }
+    
 }

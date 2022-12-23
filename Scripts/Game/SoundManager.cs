@@ -10,8 +10,8 @@ public class SoundManager : MonoBehaviour
     Dictionary<string, AudioClip> bgmClipsDict = new Dictionary<string, AudioClip>();
     Dictionary<string, AudioClip> sfxClipsDict = new Dictionary<string, AudioClip>();
 
-    private AudioSource bgmPlayer;
-    private AudioSource sfxPlayer;
+    [SerializeField] private AudioSource bgmPlayer;
+    [SerializeField] private AudioSource sfxPlayer;
 
 
     public static SoundManager instance;
@@ -28,9 +28,6 @@ public class SoundManager : MonoBehaviour
         }
 
         DontDestroyOnLoad(this.gameObject);
-
-        bgmPlayer = GameObject.Find("BGMAudioPlayer").GetComponent<AudioSource>();
-        sfxPlayer = GameObject.Find("SFXAudioPlayer").GetComponent<AudioSource>();
 
         foreach(AudioClip bgmClip in bgmClips)
         {

@@ -7,21 +7,20 @@ public class ObjectPooling : MonoBehaviour
     private int CreateObjCount = 0;
 
     public int ObjTypeCount;
-    private Dictionary<string, int> _ObjMaxCounts = new Dictionary<string, int>();
-    public Dictionary<string, int> ObjMaxCounts
-    {
-        get { return _ObjMaxCounts; }
-    }
-    private Dictionary<string, GameObject> _ObjGroups = new Dictionary<string, GameObject>();
-    private Dictionary<string, GameObject> _ObjPrefabs = new Dictionary<string, GameObject>();
-    private Dictionary<string, Stack<GameObject>> _ObjPools = new Dictionary<string, Stack<GameObject>>();
-    public Dictionary<string, GameObject> ObjGroups { get { return _ObjGroups; } }
-    public Dictionary<string, GameObject> ObjPrefabs { get { return _ObjPrefabs; } }
-    public Dictionary<string, Stack<GameObject>> ObjPools { get { return _ObjPools; } }
 
-    protected GameObject CreateNewObject(GameObject ObjPrefab)
+    [HideInInspector] public Stack<GameObject> ObjPool;
+    [HideInInspector] public int MaxCount;
+    [HideInInspector] public GameObject ObjPrefab;
+    [HideInInspector] public GameObject ObjGroup;
+
+    [HideInInspector] public Dictionary<string, int> ObjMaxCounts = new Dictionary<string, int>();
+    [HideInInspector] public Dictionary<string, GameObject> ObjGroups = new Dictionary<string, GameObject>();
+    [HideInInspector] public Dictionary<string, GameObject> ObjPrefabs = new Dictionary<string, GameObject>();
+    [HideInInspector] public Dictionary<string, Stack<GameObject>> ObjPools = new Dictionary<string, Stack<GameObject>>();
+
+    protected GameObject CreateNewObject(GameObject ObjPrefab, Transform parent)
     {
-        var newObj = Instantiate<GameObject>(ObjPrefab);
+        var newObj = Instantiate<GameObject>(ObjPrefab, parent);
         newObj.gameObject.SetActive(false);
         return newObj;
     }
@@ -30,10 +29,9 @@ public class ObjectPooling : MonoBehaviour
     {
         for (int i = 0; i < MaxCount; i++)
         {
-            var _object = CreateNewObject(ObjPrefab);
+            var _object = CreateNewObject(ObjPrefab, ObjGroup.transform);
 
             _object.name = $"{ObjPrefab.name}_{i:00}";
-            _object.transform.SetParent(ObjGroup.transform);
 
             ObjPool.Push(_object);
         }
@@ -56,11 +54,10 @@ public class ObjectPooling : MonoBehaviour
 
     protected virtual void CreateNewObjectToPool(Stack<GameObject> ObjPool, GameObject ObjPrefab, GameObject ObjGroup)
     {
-        var _object = CreateNewObject(ObjPrefab);
+        var _object = CreateNewObject(ObjPrefab, ObjGroup.transform);
 
         _object.name = $"{ObjPrefab.name}_{CreateObjCount:00}";
         CreateObjCount++;
-        _object.transform.SetParent(ObjGroup.transform);
 
         ObjPool.Push(_object);
     }
@@ -72,8 +69,9 @@ public class ObjectPooling : MonoBehaviour
             GameObject ObjPrefab = tmp.Value;
             string name = ObjPrefab.name;
             int MaxCount = ObjMaxCounts[name];
+            ObjGroups[name + "Group"].SetActive(false);
 
-            for(int i = 0; i < MaxCount; i++)
+            for (int i = 0; i < MaxCount; i++)
             {
                 if (!ObjPools.ContainsKey(ObjPrefab.name))
                 {
@@ -81,13 +79,14 @@ public class ObjectPooling : MonoBehaviour
                     ObjPools.Add(ObjPrefab.name, newList);
                 }
 
-                var _object = CreateNewObject(ObjPrefab);
+                var _object = CreateNewObject(ObjPrefab, ObjGroups[name + "Group"].transform);
 
                 _object.name = $"{name}_{i:00}";
-                _object.transform.SetParent(ObjGroups[name+"Group"].transform);
 
                 ObjPools[ObjPrefab.name].Push(_object);
             }
+
+            ObjGroups[name + "Group"].SetActive(true);
         }
     }
 
@@ -95,11 +94,6 @@ public class ObjectPooling : MonoBehaviour
     {
         var _object = ObjPools[name].Pop();
         _object.gameObject.SetActive(true);
-
-        if (ObjPools[name].Count == 1)
-        {
-            CreateNewObjectToMultiplePool(name);
-        }
 
         return _object.gameObject;
     }
@@ -109,12 +103,11 @@ public class ObjectPooling : MonoBehaviour
         GameObject ObjPrefab = ObjPrefabs[name];
         GameObject ObjGroup = ObjGroups[name + "Group"];
         
-        GameObject _object = CreateNewObject(ObjPrefab);
+        GameObject _object = CreateNewObject(ObjPrefab, ObjGroup.transform);
 
         _object.name = $"{ObjPrefab.name}_{ObjMaxCounts[ObjPrefab.name]:00}";
-        Debug.Log(_object.name);
+        //Debug.Log(_object.name);
         ObjMaxCounts[ObjPrefab.name]++;
-        _object.transform.SetParent(ObjGroup.transform);
 
         ObjPools[name].Push(_object);
     }

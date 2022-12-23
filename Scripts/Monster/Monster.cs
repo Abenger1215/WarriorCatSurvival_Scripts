@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MonsterCtrl : MonoBehaviour
+public class Monster : MonoBehaviour
 {
     MonsterManager MM;
 
@@ -14,7 +14,8 @@ public class MonsterCtrl : MonoBehaviour
 
     private Transform PlayerTr;
     private Rigidbody2D Rb;
-    private bool isDelay;
+    private bool isAttackDelay = false;
+    private bool isDamagedDelay = false;
     private int Damage;
 
     public float MoveSpeed = 9.0f;
@@ -65,15 +66,15 @@ public class MonsterCtrl : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("PLAYER"))
         {
-            if(isDelay == false)
+            if(isAttackDelay == false)
             {
                 //Debug.Log("Player Hit!");
                 SoundManager.instance.PlaySFXSound("Damaged", 0.5f);
 
                 GameManager.instance.Damaged(Damage);
                 UIManager.instance.UpdateHpUI();
-                isDelay = true;
-                StartCoroutine(Delay());
+                isAttackDelay = true;
+                StartCoroutine(AttackDelay());
             }
             else
             {
@@ -84,14 +85,17 @@ public class MonsterCtrl : MonoBehaviour
 
     public void Damaged(float damage)
     {
-        Hp -= damage;
-        if(Hp < 0)
+        if(isDamagedDelay == false)
         {
-            Die();
-        }
-        else
-        {
-            StartCoroutine(ChangeColorByDamage());
+            Hp -= damage;
+            if(Hp < 0)
+            {
+                Die();
+            }
+            else
+            {
+                StartCoroutine(ChangeColorByDamage());
+            }
         }
     }
 
@@ -119,16 +123,18 @@ public class MonsterCtrl : MonoBehaviour
         Damage = (int)(initDamage * (1 + GameManager.instance.PlayTime * 0.001f));
     }
     
-    IEnumerator Delay()
+    IEnumerator AttackDelay()
     {
-        yield return new WaitForSeconds(0.5f);
-        isDelay = false;
+        yield return new WaitForSeconds(0.25f);
+        isAttackDelay = false;
     }
 
     IEnumerator ChangeColorByDamage()
     {
+        isDamagedDelay = true;
         gameObject.GetComponent<SpriteRenderer>().color = Color.red;
         yield return new WaitForSeconds(0.1f);
+        isDamagedDelay = false;
         gameObject.GetComponent<SpriteRenderer>().color = Color.white;
     }
 }

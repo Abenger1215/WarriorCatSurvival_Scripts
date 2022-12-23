@@ -31,15 +31,16 @@ public class UIManager : MonoBehaviour
         else if(instance != null) {
             Destroy(this.gameObject);
         }
-
-        LevelUpUIScript = GetComponent<LevelUpUI>();
     }
     private void Start()
     {
+        LevelUpUIScript = LevelUp.GetComponent<LevelUpUI>();
         LevelUp.SetActive(false);
         Pause_Background.enabled = false;
         GameOver.SetActive(false);
+        ExpBar.fillAmount = 0;
         UpdateLevel();
+        GameManager.instance.SetEvent();
     }
 
     void Update()
@@ -79,11 +80,10 @@ public class UIManager : MonoBehaviour
         Pause_Background.enabled = false;
     }
 
-
     public void ActiveLevelUpUI()
     {
-        LevelUpUIScript.RandomSelect(3);
         LevelUp.SetActive(true);
+        LevelUpUIScript.RandomSelect(3);
     }
 
     public void DeactiveLevelUpUI()

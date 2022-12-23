@@ -4,16 +4,14 @@ using UnityEngine;
 
 public class MonsterManager : ObjectPooling
 {
-    private GameObject Player;
+    public GameObject activeMonsterGroup;
+    public KdTree<Monster> activeMonsterTree = new KdTree<Monster>();
 
-    public GameObject ActiveMonsterGroup;
-    public KdTree<MonsterCtrl> ActiveMonsterTree = new KdTree<MonsterCtrl>();
-
-    public List<Transform> SpawnPoints = new List<Transform>();
+    public List<Transform> spawnPoints = new List<Transform>();
 
     public static MonsterManager instance = null;
 
-    public float SpawnCooltime;
+    public float reduceCoolTime;
 
     private void Awake()
     {
@@ -26,12 +24,11 @@ public class MonsterManager : ObjectPooling
             Destroy(this.gameObject);
         }
 
-        Player = GameObject.FindGameObjectWithTag("PLAYER");
 
         Transform spawnPointGroup = GameObject.Find("SpawnPointGroup")?.transform;
         foreach (Transform point in spawnPointGroup)
         {
-            SpawnPoints.Add(point);
+            spawnPoints.Add(point);
         }
 
         for (int i = 0; i < spawnPointGroup.childCount; i++)
@@ -39,13 +36,12 @@ public class MonsterManager : ObjectPooling
             float rad = Mathf.Deg2Rad * + (i * (360 / spawnPointGroup.childCount));
             float x = 25 * Mathf.Sin(rad);
             float y = 25 * Mathf.Cos(rad);
-            spawnPointGroup.GetChild(i).transform.position = Player.transform.position + new Vector3(x, y);
-
+            spawnPointGroup.GetChild(i).transform.position = Player.instance.transform.position + new Vector3(x, y);
         }
 
         foreach (var prefab in Resources.LoadAll<GameObject>("Prefabs/Monster/")){ // µÒº≈≥ ∏Æ √ ±‚»≠
             ObjPrefabs.Add(prefab.name, prefab);
-            Debug.Log(prefab.name);
+            //Debug.Log(prefab.name);
             ObjMaxCounts[prefab.name] = 30;
         }
 
@@ -57,30 +53,39 @@ public class MonsterManager : ObjectPooling
             ObjGroups.Add(MonsterGroup.name, MonsterGroup);
         }
 
-        SpawnCooltime = 0.5f;
-
         CreateMultipleObjectPool();
-        StartCoroutine(SpawnMonster("Monster1"));
-        StartCoroutine(SpawnMonster("Monster2"));
-        FindNearestMonster();
+        StartCoroutine(SpawnMonster("Monster1", 0.5f));
+        StartCoroutine(SpawnMonster("Monster2", 0.5f));
+        StartCoroutine(SpawnMonster("Monster3", 30f));
+        StartCoroutine(FindNearest());
     }
-    private void Update()
+
+    IEnumerator FindNearest()
     {
-        FindNearestMonster();
+        while(GameManager.instance.isPlaying)
+        {
+            FindNearestMonster();
+            //Debug.Log(Player.instance.nearestMonster.name);
+            yield return new WaitForSecondsRealtime(0.05f);
+        }
     }
 
     private void FindNearestMonster()
     {
-        ActiveMonsterTree.UpdatePositions();
+        if(activeMonsterTree.Count != 0)
+        {
+            activeMonsterTree.UpdatePositions();
 
-        MonsterCtrl nearestObj = ActiveMonsterTree.FindClosest(Player.transform.position);
-        Player.GetComponent<PlayerCtrl>().NearestMonster = nearestObj;
+            //Debug.Log(activeMonsterTree.Count);
+            Monster nearestObj = activeMonsterTree.FindClosest(Player.instance.transform.position);
+            Player.instance.nearestMonster = nearestObj;
+        }
     }
 
     public override GameObject GetObjectInMultiplePool(string name)
     {
         var _object = ObjPools[name].Pop();
-        _object.transform.SetParent(ActiveMonsterGroup.transform);
+        _object.transform.SetParent(activeMonsterGroup.transform);
 
         if (ObjPools[name].Count == 1)
         {
@@ -90,7 +95,7 @@ public class MonsterManager : ObjectPooling
         return _object.gameObject;
     }
 
-    public IEnumerator SpawnMonster(string name)
+    public IEnumerator SpawnMonster(string name, float spawnCooltime)
     {
         while (GameManager.instance.isPlaying == true)
         {
@@ -100,17 +105,17 @@ public class MonsterManager : ObjectPooling
                 continue;
             }
 
-            int idx = Random.Range(0, SpawnPoints.Count);
+            int idx = Random.Range(0, spawnPoints.Count);
 
             GameObject MonsterObj = GetObjectInMultiplePool(name);
 
-            MonsterObj.transform.position = SpawnPoints[idx].transform.position;
+            MonsterObj.transform.position = spawnPoints[idx].transform.position;
             MonsterObj.SetActive(true);
-            MonsterObj.transform.SetParent(ActiveMonsterGroup.transform);
+            MonsterObj.transform.SetParent(activeMonsterGroup.transform);
 
-            ActiveMonsterTree.Add(MonsterObj.GetComponent<MonsterCtrl>());
+            activeMonsterTree.Add(MonsterObj.GetComponent<Monster>());
 
-            yield return new WaitForSecondsRealtime(SpawnCooltime);
+            yield return new WaitForSecondsRealtime(spawnCooltime - reduceCoolTime);
         }
     }
 
